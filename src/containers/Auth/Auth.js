@@ -36,8 +36,23 @@ const auth = (props) => {
       valid: false,
       touched: false,
     },
+    confirmpassword: {
+      elementType: "input",
+      elementConfig: {
+        type: "password",
+        placeholder: "confirm Password",
+      },
+      value: "",
+      validation: {
+        isRequired: true,
+        checkmatch: true,
+      },
+      valid: false,
+      touched: false,
+    },
   });
   const [isSignup, setIsSignUp] = useState(true);
+  const [formIsValid, setformIsValid] = useState(false);
 
   const checkValidity = (value, rules) => {
     let isValid = true;
@@ -50,7 +65,14 @@ const auth = (props) => {
     }
 
     if (rules.minLength) {
+      if (authForm.confirmpassword.value) {
+        isValid = value.trim() === authForm.confirmpassword.value && isValid;
+      }
       isValid = value.length >= rules.minLength && isValid;
+    }
+
+    if (rules.checkmatch) {
+      isValid = value.trim() === authForm.password.value && isValid;
     }
 
     if (rules.isEmail) {
@@ -63,20 +85,102 @@ const auth = (props) => {
 
   const inputChangedHandler = (event, id) => {
     event.preventDefault();
-    const data = {
-      ...authForm,
-      [id]: {
-        ...authForm[id],
-        value: event.target.value,
-        valid: checkValidity(event.target.value, authForm[id].validation),
-        touched: true,
-      },
-    };
-    setAuthForm(data);
+    const copy = { ...authForm };
+    const deepCopy = { ...copy[id] };
+    deepCopy.value = event.target.value;
+    deepCopy.valid = checkValidity(deepCopy.value, deepCopy.validation);
+    deepCopy.touched = true;
+    copy[id] = deepCopy;
+    let formIsValid = true;
+    for (let inputIdentifier in copy) {
+      console.log(copy.email, copy.email.valid);
+      formIsValid = copy[inputIdentifier].valid && formIsValid;
+    }
+    setAuthForm(copy);
+    setformIsValid(formIsValid);
   };
 
   const changeMode = () => {
     setIsSignUp(!isSignup);
+    const newform = {
+      email: {
+        elementType: "input",
+        elementConfig: {
+          type: "email",
+          placeholder: "Email",
+        },
+        value: "",
+        validation: {
+          isRequired: true,
+          isEmail: true,
+        },
+        valid: false,
+        touched: false,
+      },
+      password: {
+        elementType: "input",
+        elementConfig: {
+          type: "password",
+          placeholder: "Password",
+        },
+        value: "",
+        validation: {
+          isRequired: true,
+          minLength: 6,
+        },
+        valid: false,
+        touched: false,
+      },
+      confirmpassword: {
+        elementType: "input",
+        elementConfig: {
+          type: "password",
+          placeholder: "confirm Password",
+        },
+        value: "",
+        validation: {
+          isRequired: true,
+          checkmatch: true,
+        },
+        valid: false,
+        touched: false,
+      },
+    };
+    if (isSignup !== true) {
+      setAuthForm(newform);
+    } else {
+      const oldform = {
+        email: {
+          elementType: "input",
+          elementConfig: {
+            type: "email",
+            placeholder: "Email",
+          },
+          value: "",
+          validation: {
+            isRequired: true,
+            isEmail: true,
+          },
+          valid: false,
+          touched: false,
+        },
+        password: {
+          elementType: "input",
+          elementConfig: {
+            type: "password",
+            placeholder: "Password",
+          },
+          value: "",
+          validation: {
+            isRequired: true,
+            minLength: 6,
+          },
+          valid: false,
+          touched: false,
+        },
+      };
+      setAuthForm(oldform);
+    }
   };
 
   const formSubmit = (event, isSignup) => {
@@ -94,7 +198,10 @@ const auth = (props) => {
     formData.push({ id: key, inputData: authForm[key] });
   }
   let button = (
-    <Button btntype="Success">
+    <Button
+      btntype="Success"
+      disabled={isSignup ? (formIsValid ? false : true) : false}
+    >
       {isSignup
         ? props.loading
           ? "Signing up..."
