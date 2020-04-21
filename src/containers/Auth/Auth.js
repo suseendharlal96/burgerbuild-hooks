@@ -65,7 +65,7 @@ const auth = (props) => {
     }
 
     if (rules.minLength) {
-      if (authForm.confirmpassword.value) {
+      if (authForm.confirmpassword && authForm.confirmpassword.value) {
         isValid = value.trim() === authForm.confirmpassword.value && isValid;
       }
       isValid = value.length >= rules.minLength && isValid;
